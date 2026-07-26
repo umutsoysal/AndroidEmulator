@@ -1,5 +1,9 @@
 # Android GUI Automation Agent
 
+[![CI & Linting](https://github.com/umutsoysal/AndroidEmulator/actions/workflows/ci.yml/badge.svg)](https://github.com/umutsoysal/AndroidEmulator/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 An autonomous AI Agent that operates on Android emulators or physical Android smartphones. Powered by **Gemini Multimodal Vision** and **Android Debug Bridge (ADB)**, the agent interacts with Android applications directly through GUI inputs (clicking, typing, swiping, hardware keys) without requiring application source code or dedicated APIs.
 
 ---

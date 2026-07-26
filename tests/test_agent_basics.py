@@ -3,6 +3,7 @@ Unit tests for Android Agent components.
 """
 
 import unittest
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -66,17 +67,23 @@ class TestAndroidAgentComponents(unittest.TestCase):
         self.assertEqual(action.element_id, 1)
 
     def test_adb_wrapper(self):
-        """Tests ADBWrapper device discovery call."""
+        """Tests ADBWrapper device discovery call returns a list."""
         adb = ADBWrapper()
         devices = adb.get_devices()
         self.assertIsInstance(devices, list)
 
     def test_emulator_manager(self):
-        """Tests EmulatorManager AVD enumeration call."""
+        """Tests EmulatorManager AVD enumeration with mock subprocess call."""
         emu = EmulatorManager()
         avds = emu.list_avds()
         self.assertIsInstance(avds, list)
-        self.assertIn("Pixel_3a_API_34", avds)
+
+        # Verify AVD list parsing deterministically with mock subprocess output
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 0
+            mock_run.return_value.stdout = "Pixel_3a_API_34\nPixel_Tablet_API_36\n"
+            mock_avds = emu.list_avds()
+            self.assertEqual(mock_avds, ["Pixel_3a_API_34", "Pixel_Tablet_API_36"])
 
 
 if __name__ == "__main__":
