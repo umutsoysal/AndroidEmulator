@@ -9,3 +9,5 @@ dist/
 build/
 *.pyc
 /android_agent/__pycache__
+/android_agent/agent/__pycache__
+/android_agent/device/__pycache__
