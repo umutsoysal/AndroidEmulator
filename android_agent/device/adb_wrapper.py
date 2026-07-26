@@ -114,6 +114,7 @@ class ADBWrapper:
         logger.info("ADB Tap: (%d, %d)", x, y)
         self.execute(["shell", "input", "tap", str(x), str(y)])
 
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int = 300):
         """Simulates a touch drag/swipe from (x1, y1) to (x2, y2)."""
         logger.info("ADB Swipe: (%d, %d) -> (%d, %d) [%dms]", x1, y1, x2, y2, duration_ms)
