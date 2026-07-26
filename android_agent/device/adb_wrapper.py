@@ -44,9 +44,7 @@ class ADBWrapper:
             os.path.join(home, "Android", "Sdk", "platform-tools", "adb"),
         ]
 
-        android_home = os.environ.get("ANDROID_HOME") or os.environ.get(
-            "ANDROID_SDK_ROOT"
-        )
+        android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
         if android_home:
             candidates.insert(0, os.path.join(android_home, "platform-tools", "adb"))
 
@@ -63,9 +61,7 @@ class ADBWrapper:
             return devices[0][0]
         return None
 
-    def execute(
-        self, args: list[str], timeout: int = 30
-    ) -> subprocess.CompletedProcess:
+    def execute(self, args: list[str], timeout: int = 30) -> subprocess.CompletedProcess:
         """Executes an adb command line."""
         cmd = [self.adb_path]
         if self.serial:
@@ -73,13 +69,9 @@ class ADBWrapper:
         cmd.extend(args)
 
         try:
-            res = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=timeout, check=False
-            )
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
             if res.returncode != 0 and res.stderr:
-                logger.debug(
-                    "ADB command %s failed: %s", " ".join(cmd), res.stderr.strip()
-                )
+                logger.debug("ADB command %s failed: %s", " ".join(cmd), res.stderr.strip())
             return res
         except subprocess.TimeoutExpired:
             logger.error("ADB command %s timed out after %ds", " ".join(cmd), timeout)
@@ -127,20 +119,9 @@ class ADBWrapper:
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int = 300):
         """Simulates a touch drag/swipe from (x1, y1) to (x2, y2)."""
-        logger.info(
-            "ADB Swipe: (%d, %d) -> (%d, %d) [%dms]", x1, y1, x2, y2, duration_ms
-        )
+        logger.info("ADB Swipe: (%d, %d) -> (%d, %d) [%dms]", x1, y1, x2, y2, duration_ms)
         self.execute(
-            [
-                "shell",
-                "input",
-                "swipe",
-                str(x1),
-                str(y1),
-                str(x2),
-                str(y2),
-                str(duration_ms),
-            ]
+            ["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration_ms)]
         )
 
     def type_text(self, text: str):

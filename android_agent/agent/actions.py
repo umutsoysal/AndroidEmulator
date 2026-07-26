@@ -34,15 +34,12 @@ class AgentAction(BaseModel):
     )
     x: int | None = Field(default=None, description="X coordinate for TAP_COORDINATE.")
     y: int | None = Field(default=None, description="Y coordinate for TAP_COORDINATE.")
-    text: str | None = Field(
-        default=None, description="Text string to type for TYPE_TEXT action."
-    )
+    text: str | None = Field(default=None, description="Text string to type for TYPE_TEXT action.")
     direction: str | None = Field(
         default=None, description="Swipe direction: UP, DOWN, LEFT, or RIGHT."
     )
     keycode: str | None = Field(
-        default=None,
-        description="Keycode name for PRESS_KEY: HOME, BACK, ENTER, APP_SWITCH.",
+        default=None, description="Keycode name for PRESS_KEY: HOME, BACK, ENTER, APP_SWITCH."
     )
     package_name: str | None = Field(
         default=None, description="Package name to launch for LAUNCH_APP."

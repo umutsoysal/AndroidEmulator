@@ -26,9 +26,7 @@ def main():
             emu_mgr.start_emulator(avds[0])
             print("Waiting for emulator to boot up...")
         else:
-            print(
-                "Please connect an Android phone with USB debugging or create an AVD."
-            )
+            print("Please connect an Android phone with USB debugging or create an AVD.")
             return
 
     # 2. Check API key

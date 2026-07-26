@@ -13,7 +13,9 @@ disable=
     too-many-statements,
     too-many-branches,
     too-many-arguments,
-    too-many-positional-arguments
+    too-many-positional-arguments,
+    unsupported-binary-operation,
+    unknown-option-value
 
 [FORMAT]
 max-line-length=120

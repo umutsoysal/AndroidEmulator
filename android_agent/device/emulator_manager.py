@@ -27,9 +27,7 @@ class EmulatorManager:
             os.path.join(home, "Android", "Sdk", "emulator", "emulator"),
         ]
 
-        android_home = os.environ.get("ANDROID_HOME") or os.environ.get(
-            "ANDROID_SDK_ROOT"
-        )
+        android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
         if android_home:
             candidates.insert(0, os.path.join(android_home, "emulator", "emulator"))
 
@@ -50,9 +48,7 @@ class EmulatorManager:
                 check=False,
             )
             if res.returncode == 0:
-                return [
-                    line.strip() for line in res.stdout.splitlines() if line.strip()
-                ]
+                return [line.strip() for line in res.stdout.splitlines() if line.strip()]
         except (subprocess.SubprocessError, OSError) as e:
             logger.error("Failed to list AVDs: %s", e)
         return []
@@ -65,7 +61,5 @@ class EmulatorManager:
 
         logger.info("Starting emulator '%s' (headless=%s)...", avd_name, headless)
         # pylint: disable=consider-using-with
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return process

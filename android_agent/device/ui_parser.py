@@ -60,9 +60,7 @@ class UIParser:
 
     @classmethod
     # pylint: disable=too-many-locals
-    def parse_xml(
-        cls, xml_content: str, filter_interactive: bool = True
-    ) -> list[UIElement]:
+    def parse_xml(cls, xml_content: str, filter_interactive: bool = True) -> list[UIElement]:
         """
         Parses XML string into list of UIElement objects.
         If filter_interactive is True, filters out non-interactive or empty elements.
@@ -105,8 +103,7 @@ class UIParser:
 
             clickable = attr.get("clickable", "false").lower() == "true"
             editable = (
-                attr.get("focused", "false").lower() == "true"
-                or "edittext" in class_name.lower()
+                attr.get("focused", "false").lower() == "true" or "edittext" in class_name.lower()
             )
             scrollable = attr.get("scrollable", "false").lower() == "true"
             enabled = attr.get("enabled", "true").lower() == "true"
@@ -114,11 +111,7 @@ class UIParser:
 
             if filter_interactive:
                 is_meaningful = (
-                    clickable
-                    or editable
-                    or scrollable
-                    or bool(text)
-                    or bool(content_desc)
+                    clickable or editable or scrollable or bool(text) or bool(content_desc)
                 )
                 if not is_meaningful:
                     continue

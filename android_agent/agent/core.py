@@ -29,9 +29,7 @@ class AndroidAgent:
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
-            logger.warning(
-                "GEMINI_API_KEY env var is not set! Pass api_key parameter or set .env."
-            )
+            logger.warning("GEMINI_API_KEY env var is not set! Pass api_key parameter or set .env.")
 
         self.client = genai.Client(api_key=self.api_key) if self.api_key else None
         self.model_name = model_name
@@ -68,9 +66,7 @@ class AndroidAgent:
             if target:
                 self.adb.tap(target.center[0], target.center[1])
             else:
-                logger.error(
-                    "Element ID %d not found in current UI tree.", action.element_id
-                )
+                logger.error("Element ID %d not found in current UI tree.", action.element_id)
 
         elif action.action_type == ActionType.TAP_COORDINATE:
             if action.x is not None and action.y is not None:
@@ -121,11 +117,11 @@ class AndroidAgent:
         for e in elements:
             info = f"ID {e.id}: [{e.class_name}] bounds={e.bounds}"
             if e.text:
-                info += f" text={e.text!r}"
+                info += f" text={repr(e.text)}"
             if e.content_desc:
-                info += f" desc={e.content_desc!r}"
+                info += f" desc={repr(e.content_desc)}"
             if e.resource_id:
-                info += f" id={e.resource_id!r}"
+                info += f" id={repr(e.resource_id)}"
             elements_text_lines.append(info)
 
         elements_summary = "\n".join(elements_text_lines)

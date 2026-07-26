@@ -34,51 +34,33 @@ def main():
     )
     run_parser.add_argument("--task", "-t", required=True, help="Task description")
     run_parser.add_argument("--api-key", "-k", default=None, help="Gemini API key")
-    run_parser.add_argument(
-        "--max-steps", type=int, default=15, help="Maximum steps (default: 15)"
-    )
-    run_parser.add_argument(
-        "--model", default="gemini-flash-latest", help="Gemini model name"
-    )
+    run_parser.add_argument("--max-steps", type=int, default=15, help="Maximum steps (default: 15)")
+    run_parser.add_argument("--model", default="gemini-flash-latest", help="Gemini model name")
     run_parser.add_argument("--serial", "-s", default=None, help="Device serial number")
 
     # Command: devices
     subparsers.add_parser("devices", help="List connected ADB devices and emulators")
 
     # Command: emulators
-    subparsers.add_parser(
-        "emulators", help="List available Android Virtual Devices (AVDs)"
-    )
+    subparsers.add_parser("emulators", help="List available Android Virtual Devices (AVDs)")
 
     # Command: start-emulator
     start_emu_parser = subparsers.add_parser(
         "start-emulator", help="Launch an Android Virtual Device"
     )
-    start_emu_parser.add_argument(
-        "--name", "-n", required=True, help="AVD name to launch"
-    )
+    start_emu_parser.add_argument("--name", "-n", required=True, help="AVD name to launch")
     start_emu_parser.add_argument(
         "--headless", action="store_true", help="Launch without window UI"
     )
 
     # Command: screenshot
-    ss_parser = subparsers.add_parser(
-        "screenshot", help="Capture screenshot from device"
-    )
-    ss_parser.add_argument(
-        "--output", "-o", default="screenshot.png", help="Output PNG filepath"
-    )
-    ss_parser.add_argument(
-        "--annotate", action="store_true", help="Annotate image with UI badges"
-    )
+    ss_parser = subparsers.add_parser("screenshot", help="Capture screenshot from device")
+    ss_parser.add_argument("--output", "-o", default="screenshot.png", help="Output PNG filepath")
+    ss_parser.add_argument("--annotate", action="store_true", help="Annotate image with UI badges")
 
     # Command: dump-ui
-    dump_parser = subparsers.add_parser(
-        "dump-ui", help="Dump and print current UI element tree"
-    )
-    dump_parser.add_argument(
-        "--serial", "-s", default=None, help="Device serial number"
-    )
+    dump_parser = subparsers.add_parser("dump-ui", help="Dump and print current UI element tree")
+    dump_parser.add_argument("--serial", "-s", default=None, help="Device serial number")
 
     args = parser.parse_args()
 
@@ -143,9 +125,7 @@ def main():
         console.print(table)
 
     elif args.command == "run":
-        agent = AndroidAgent(
-            api_key=args.api_key, model_name=args.model, serial=args.serial
-        )
+        agent = AndroidAgent(api_key=args.api_key, model_name=args.model, serial=args.serial)
         res = agent.run_task(args.task, max_steps=args.max_steps)
         console.print(f"\n[bold blue]Final Agent Output:[/bold blue] {res}")
 
