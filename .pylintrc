@@ -1,0 +1,17 @@
+[MAIN]
+ignore=
+    .venv,
+    build,
+    dist
+
+disable=
+    import-error,
+    too-few-public-methods,
+    broad-exception-caught,
+    too-many-instance-attributes,
+    too-many-locals,
+    too-many-statements,
+    too-many-branches
+
+[FORMAT]
+max-line-length=120
