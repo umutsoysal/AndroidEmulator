@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
 
@@ -11,6 +12,7 @@ from .agent.core import AndroidAgent
 from .utils.visualizer import draw_element_boxes
 from .utils.logger import logger
 
+load_dotenv()
 console = Console()
 
 def main():
@@ -23,8 +25,9 @@ def main():
     # Command: run
     run_parser = subparsers.add_parser("run", help="Run an autonomous AI agent task on device/emulator")
     run_parser.add_argument("--task", "-t", required=True, help="Task description (e.g. 'Open Settings and click Display')")
+    run_parser.add_argument("--api-key", "-k", default=None, help="Gemini API key (or set GEMINI_API_KEY env var)")
     run_parser.add_argument("--max-steps", type=int, default=15, help="Maximum number of steps (default: 15)")
-    run_parser.add_argument("--model", default="gemini-2.5-flash", help="Gemini model name (default: gemini-2.5-flash)")
+    run_parser.add_argument("--model", default="gemini-flash-latest", help="Gemini model name (default: gemini-flash-latest)")
     run_parser.add_argument("--serial", "-s", default=None, help="Device serial number")
 
     # Command: devices
@@ -105,6 +108,7 @@ def main():
 
     elif args.command == "run":
         agent = AndroidAgent(
+            api_key=args.api_key,
             model_name=args.model,
             serial=args.serial
         )

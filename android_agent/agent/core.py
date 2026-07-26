@@ -18,7 +18,7 @@ class AndroidAgent:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-flash-latest",
         serial: Optional[str] = None,
         adb_wrapper: Optional[ADBWrapper] = None
     ):
@@ -133,16 +133,31 @@ Observing the annotated screenshot and elements list, output the structured Agen
         if not self.client:
             raise RuntimeError("GEMINI_API_KEY is not set. Please set GEMINI_API_KEY environment variable.")
 
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=[prompt, annotated_img],
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                response_mime_type="application/json",
-                response_schema=AgentAction,
-                temperature=0.2,
-            ),
-        )
+        # Generate content with retry for 429 rate limits
+        max_retries = 3
+        backoff_seconds = 5
+        response = None
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=[prompt, annotated_img],
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT,
+                        response_mime_type="application/json",
+                        response_schema=AgentAction,
+                        temperature=0.2,
+                    ),
+                )
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries:
+                    logger.warning(f"API Rate limit (429) hit. Retrying in {backoff_seconds}s (attempt {attempt}/{max_retries})...")
+                    time.sleep(backoff_seconds)
+                    backoff_seconds *= 2
+                else:
+                    raise e
 
         action: AgentAction = response.parsed
         

@@ -1,0 +1,11 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.png
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+*.pyc
+/android_agent/__pycache__

@@ -31,7 +31,7 @@ def main():
         print("Note: GEMINI_API_KEY is not set. Set it before running agent tasks.")
 
     # 3. Initialize Agent
-    agent = AndroidAgent(model_name="gemini-2.5-flash")
+    agent = AndroidAgent(model_name="gemini-2.0-flash")
     
     # Example task (commented out by default)
     # result = agent.run_task("Open Settings and check Battery percentage")
