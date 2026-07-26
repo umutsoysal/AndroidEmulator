@@ -1,6 +1,9 @@
+"""
+Autonomous AI Agent core module for Android emulator and device control via Gemini and ADB.
+"""
+
 import os
 import time
-import json
 from typing import List, Optional, Dict, Any
 from google import genai
 from google.genai import types
@@ -11,6 +14,7 @@ from ..utils.visualizer import draw_element_boxes
 from ..utils.logger import logger
 from .actions import AgentAction, ActionType
 from .prompts import SYSTEM_PROMPT
+
 
 class AndroidAgent:
     """Autonomous agent operating on an Android device via ADB and Gemini AI."""
@@ -24,27 +28,36 @@ class AndroidAgent:
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
-            logger.warning("[WARNING] GEMINI_API_KEY environment variable is not set! Set it or pass api_key parameter.")
-        
+            logger.warning(
+                "GEMINI_API_KEY env var is not set! Pass api_key parameter or set .env."
+            )
+
         self.client = genai.Client(api_key=self.api_key) if self.api_key else None
         self.model_name = model_name
         self.adb = adb_wrapper or ADBWrapper(serial=serial)
         self.history: List[Dict[str, Any]] = []
 
     def get_current_state(self):
-        """Captures screenshot, dumps XML hierarchy, parses UI elements and creates annotated image."""
+        """Captures screenshot, dumps XML tree, parses UI elements, and annotates image."""
         screenshot = self.adb.screencap()
         xml_dump = self.adb.dump_hierarchy()
         elements = UIParser.parse_xml(xml_dump, filter_interactive=True)
-        
+
         elements_dict = [e.to_dict() for e in elements]
         annotated_image = draw_element_boxes(screenshot, elements_dict)
-        
-        return screenshot, annotated_image, elements, elements_dict
 
-    def execute_action(self, action: AgentAction, elements: List[UIElement], screen_width: int, screen_height: int):
+        return screenshot, annotated_image, elements
+
+    # pylint: disable=too-many-branches
+    def execute_action(
+        self,
+        action: AgentAction,
+        elements: List[UIElement],
+        screen_width: int,
+        screen_height: int
+    ):
         """Executes selected action via ADBWrapper."""
-        logger.info(f"[ACTION] {action.action_type.value}: {action.thought}")
+        logger.info("[ACTION] %s: %s", action.action_type.value, action.thought)
 
         if action.action_type == ActionType.TAP_ELEMENT:
             if action.element_id is None:
@@ -54,7 +67,7 @@ class AndroidAgent:
             if target:
                 self.adb.tap(target.center[0], target.center[1])
             else:
-                logger.error(f"Element ID {action.element_id} not found in current UI tree.")
+                logger.error("Element ID %d not found in current UI tree.", action.element_id)
 
         elif action.action_type == ActionType.TAP_COORDINATE:
             if action.x is not None and action.y is not None:
@@ -74,9 +87,9 @@ class AndroidAgent:
             cx, cy = screen_width // 2, screen_height // 2
             dx, dy = screen_width // 3, screen_height // 3
 
-            if direction == "UP": # Scroll down
+            if direction == "UP":  # Scroll down
                 self.adb.swipe(cx, cy + dy, cx, cy - dy)
-            elif direction == "DOWN": # Scroll up
+            elif direction == "DOWN":  # Scroll up
                 self.adb.swipe(cx, cy - dy, cx, cy + dy)
             elif direction == "LEFT":
                 self.adb.swipe(cx + dx, cy, cx - dx, cy)
@@ -94,9 +107,10 @@ class AndroidAgent:
         elif action.action_type == ActionType.WAIT:
             time.sleep(action.duration_seconds or 1.0)
 
+    # pylint: disable=too-many-locals
     def run_step(self, task: str) -> AgentAction:
         """Executes a single step of perception -> reasoning -> action execution."""
-        screenshot, annotated_img, elements, elements_dict = self.get_current_state()
+        screenshot, annotated_img, elements = self.get_current_state()
         w, h = screenshot.size
 
         # Format elements text summary for Gemini
@@ -116,22 +130,28 @@ class AndroidAgent:
         history_summary = ""
         if self.history:
             history_summary = "Prior Action History:\n" + "\n".join(
-                [f"- Step {h['step']}: {h['action']} (Thought: {h['thought']})" for h in self.history]
+                [
+                    f"- Step {h['step']}: {h['action']} (Thought: {h['thought']})"
+                    for h in self.history
+                ]
             )
 
+        no_elements_msg = "(No text/interactive elements parsed from hierarchy)"
         prompt = f"""
 Goal: {task}
 
 {history_summary}
 
 Current Interactive UI Elements on Screen:
-{elements_summary if elements_summary else "(No text/interactive elements parsed from hierarchy)"}
+{elements_summary if elements_summary else no_elements_msg}
 
 Observing the annotated screenshot and elements list, output the structured AgentAction to perform next.
 """
 
         if not self.client:
-            raise RuntimeError("GEMINI_API_KEY is not set. Please set GEMINI_API_KEY environment variable.")
+            raise RuntimeError(
+                "GEMINI_API_KEY is not set. Please set GEMINI_API_KEY environment variable."
+            )
 
         # Generate content with retry for 429 rate limits
         max_retries = 3
@@ -151,16 +171,20 @@ Observing the annotated screenshot and elements list, output the structured Agen
                     ),
                 )
                 break
+            # pylint: disable=broad-exception-caught
             except Exception as e:
                 if "429" in str(e) and attempt < max_retries:
-                    logger.warning(f"API Rate limit (429) hit. Retrying in {backoff_seconds}s (attempt {attempt}/{max_retries})...")
+                    logger.warning(
+                        "API Rate limit (429) hit. Retrying in %ds (attempt %d/%d)...",
+                        backoff_seconds, attempt, max_retries
+                    )
                     time.sleep(backoff_seconds)
                     backoff_seconds *= 2
                 else:
                     raise e
 
         action: AgentAction = response.parsed
-        
+
         # Log and record step
         self.history.append({
             "step": len(self.history) + 1,
@@ -176,19 +200,19 @@ Observing the annotated screenshot and elements list, output the structured Agen
 
     def run_task(self, task: str, max_steps: int = 15) -> str:
         """Runs autonomous agent loop until goal is finished or max_steps reached."""
-        logger.info(f"Starting Android Agent task: '{task}' (max_steps={max_steps})")
+        logger.info("Starting Android Agent task: '%s' (max_steps=%d)", task, max_steps)
         self.history.clear()
 
         for step in range(1, max_steps + 1):
-            logger.info(f"\n--- Step {step}/{max_steps} ---")
+            logger.info("\n--- Step %d/%d ---", step, max_steps)
             action = self.run_step(task)
 
             if action.action_type == ActionType.FINISH:
                 msg = action.result_message or "Task finished successfully."
-                logger.info(f"[SUCCESS] {msg}")
+                logger.info("[SUCCESS] %s", msg)
                 return msg
 
-            time.sleep(1.5) # Wait for device UI animation to settle
+            time.sleep(1.5)  # Wait for device UI animation to settle
 
-        logger.warning(f"Reached max steps ({max_steps}) without finishing.")
+        logger.warning("Reached max steps (%d) without finishing.", max_steps)
         return "Max steps reached."

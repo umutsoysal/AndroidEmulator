@@ -1,18 +1,25 @@
+"""
+Parser module for Android uiautomator layout XML files.
+"""
+
 import re
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict, Any
 
+
 @dataclass
+# pylint: disable=too-many-instance-attributes
 class UIElement:
+    """Represents a single parsed UI element from Android uiautomator XML."""
     id: int
     text: str
     content_desc: str
     resource_id: str
     class_name: str
     package: str
-    bounds: Tuple[int, int, int, int] # (xmin, ymin, xmax, ymax)
-    center: Tuple[int, int]           # (cx, cy)
+    bounds: Tuple[int, int, int, int]  # (xmin, ymin, xmax, ymax)
+    center: Tuple[int, int]            # (cx, cy)
     clickable: bool
     editable: bool
     scrollable: bool
@@ -20,6 +27,7 @@ class UIElement:
     focused: bool
 
     def to_dict(self) -> Dict[str, Any]:
+        """Converts element properties to dictionary."""
         return {
             "id": self.id,
             "text": self.text,
@@ -33,9 +41,10 @@ class UIElement:
             "scrollable": self.scrollable,
         }
 
+
 class UIParser:
     """Parses Android uiautomator dump XML hierarchies."""
-    
+
     @staticmethod
     def parse_bounds(bounds_str: str) -> Optional[Tuple[int, int, int, int]]:
         """
@@ -49,10 +58,11 @@ class UIParser:
         return None
 
     @classmethod
+    # pylint: disable=too-many-locals
     def parse_xml(cls, xml_content: str, filter_interactive: bool = True) -> List[UIElement]:
         """
         Parses XML string into list of UIElement objects.
-        If filter_interactive is True, filters out zero-size elements and non-interactive/empty elements.
+        If filter_interactive is True, filters out non-interactive or empty elements.
         """
         if not xml_content or not xml_content.strip():
             return []
@@ -68,7 +78,7 @@ class UIParser:
         for node in root.iter():
             if node.tag != "node":
                 continue
-                
+
             attr = node.attrib
             bounds_str = attr.get("bounds", "")
             bounds = cls.parse_bounds(bounds_str)
@@ -91,14 +101,18 @@ class UIParser:
             package = attr.get("package", "").strip()
 
             clickable = attr.get("clickable", "false").lower() == "true"
-            editable = attr.get("focused", "false").lower() == "true" or "edittext" in class_name.lower()
+            editable = (
+                attr.get("focused", "false").lower() == "true" or
+                "edittext" in class_name.lower()
+            )
             scrollable = attr.get("scrollable", "false").lower() == "true"
             enabled = attr.get("enabled", "true").lower() == "true"
             focused = attr.get("focused", "false").lower() == "true"
 
             if filter_interactive:
-                # Keep element if clickable, editable, scrollable, or has visible text/description
-                is_meaningful = clickable or editable or scrollable or bool(text) or bool(content_desc)
+                is_meaningful = (
+                    clickable or editable or scrollable or bool(text) or bool(content_desc)
+                )
                 if not is_meaningful:
                     continue
 

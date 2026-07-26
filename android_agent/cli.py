@@ -1,6 +1,9 @@
+"""
+Command-line interface for the Android AI Agent.
+"""
+
 import argparse
 import sys
-import os
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
@@ -10,24 +13,32 @@ from .device.emulator_manager import EmulatorManager
 from .device.ui_parser import UIParser
 from .agent.core import AndroidAgent
 from .utils.visualizer import draw_element_boxes
-from .utils.logger import logger
 
 load_dotenv()
 console = Console()
 
+
+# pylint: disable=too-many-locals,too-many-statements
 def main():
+    """Main CLI entrypoint for android-agent."""
     parser = argparse.ArgumentParser(
         prog="android-agent",
-        description="Autonomous AI Agent operating on Android Emulator and Physical Devices via ADB and Gemini AI."
+        description="Autonomous AI Agent operating on Android Emulator/Device via ADB & Gemini."
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # Command: run
-    run_parser = subparsers.add_parser("run", help="Run an autonomous AI agent task on device/emulator")
-    run_parser.add_argument("--task", "-t", required=True, help="Task description (e.g. 'Open Settings and click Display')")
-    run_parser.add_argument("--api-key", "-k", default=None, help="Gemini API key (or set GEMINI_API_KEY env var)")
-    run_parser.add_argument("--max-steps", type=int, default=15, help="Maximum number of steps (default: 15)")
-    run_parser.add_argument("--model", default="gemini-flash-latest", help="Gemini model name (default: gemini-flash-latest)")
+    run_parser = subparsers.add_parser(
+        "run", help="Run an autonomous AI agent task on device/emulator"
+    )
+    run_parser.add_argument("--task", "-t", required=True, help="Task description")
+    run_parser.add_argument("--api-key", "-k", default=None, help="Gemini API key")
+    run_parser.add_argument(
+        "--max-steps", type=int, default=15, help="Maximum steps (default: 15)"
+    )
+    run_parser.add_argument(
+        "--model", default="gemini-flash-latest", help="Gemini model name"
+    )
     run_parser.add_argument("--serial", "-s", default=None, help="Device serial number")
 
     # Command: devices
@@ -37,14 +48,20 @@ def main():
     subparsers.add_parser("emulators", help="List available Android Virtual Devices (AVDs)")
 
     # Command: start-emulator
-    start_emu_parser = subparsers.add_parser("start-emulator", help="Launch an Android Virtual Device")
+    start_emu_parser = subparsers.add_parser(
+        "start-emulator", help="Launch an Android Virtual Device"
+    )
     start_emu_parser.add_argument("--name", "-n", required=True, help="AVD name to launch")
-    start_emu_parser.add_argument("--headless", action="store_true", help="Launch without window UI")
+    start_emu_parser.add_argument(
+        "--headless", action="store_true", help="Launch without window UI"
+    )
 
     # Command: screenshot
     ss_parser = subparsers.add_parser("screenshot", help="Capture screenshot from device")
     ss_parser.add_argument("--output", "-o", default="screenshot.png", help="Output PNG filepath")
-    ss_parser.add_argument("--annotate", action="store_true", help="Annotate image with UI bounding box badges")
+    ss_parser.add_argument(
+        "--annotate", action="store_true", help="Annotate image with UI badges"
+    )
 
     # Command: dump-ui
     dump_parser = subparsers.add_parser("dump-ui", help="Dump and print current UI element tree")
@@ -78,7 +95,9 @@ def main():
     elif args.command == "start-emulator":
         emu = EmulatorManager()
         emu.start_emulator(args.name, headless=args.headless)
-        console.print(f"[green]Started emulator process for '{args.name}'. Use 'android-agent devices' to verify when booted.[/green]")
+        console.print(
+            f"[green]Started emulator process for '{args.name}'.[/green]"
+        )
 
     elif args.command == "screenshot":
         adb = ADBWrapper()
@@ -103,7 +122,9 @@ def main():
         table.add_column("Center", style="green")
         for e in elements:
             label = e.text or e.content_desc or e.resource_id or ""
-            table.add_row(str(e.id), e.class_name.split(".")[-1], label, str(e.bounds), str(e.center))
+            table.add_row(
+                str(e.id), e.class_name.split(".")[-1], label, str(e.bounds), str(e.center)
+            )
         console.print(table)
 
     elif args.command == "run":
@@ -114,6 +135,7 @@ def main():
         )
         res = agent.run_task(args.task, max_steps=args.max_steps)
         console.print(f"\n[bold blue]Final Agent Output:[/bold blue] {res}")
+
 
 if __name__ == "__main__":
     main()

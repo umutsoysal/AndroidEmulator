@@ -1,3 +1,7 @@
+"""
+System instructions and prompts for the Android AI Agent.
+"""
+
 SYSTEM_PROMPT = """You are an expert autonomous AI agent operating an Android smartphone/emulator.
 Your goal is to achieve the user's objective by observing the current screenshot and the parsed UI elements list, then choosing the best action.
 

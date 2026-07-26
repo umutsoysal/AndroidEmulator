@@ -1,15 +1,19 @@
+"""
+Wrapper module for low-level Android Debug Bridge (ADB) operations.
+"""
+
+import io
 import os
 import shutil
 import subprocess
-import time
-import io
 from typing import List, Optional, Tuple
 from PIL import Image
 from ..utils.logger import logger
 
+
 class ADBWrapper:
     """Wrapper for low-level Android Debug Bridge (ADB) operations."""
-    
+
     KEYCODES = {
         "HOME": 3,
         "BACK": 4,
@@ -27,19 +31,24 @@ class ADBWrapper:
         self.serial = serial or self._get_default_device()
 
     def _find_adb(self) -> str:
-        """Finds adb binary location on standard SDK paths or PATH."""
-        custom_sdk_path = "/Users/umutsoysal/Library/Android/sdk/platform-tools/adb"
-        if os.path.exists(custom_sdk_path):
-            return custom_sdk_path
-        
+        """Finds adb binary location on SDK paths, environment variables, or system PATH."""
         system_adb = shutil.which("adb")
         if system_adb:
             return system_adb
-            
+
         home = os.path.expanduser("~")
-        mac_sdk = os.path.join(home, "Library", "Android", "sdk", "platform-tools", "adb")
-        if os.path.exists(mac_sdk):
-            return mac_sdk
+        candidates = [
+            os.path.join(home, "Library", "Android", "sdk", "platform-tools", "adb"),
+            os.path.join(home, "Android", "Sdk", "platform-tools", "adb"),
+        ]
+
+        android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+        if android_home:
+            candidates.insert(0, os.path.join(android_home, "platform-tools", "adb"))
+
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return candidate
 
         return "adb"
 
@@ -56,20 +65,20 @@ class ADBWrapper:
         if self.serial:
             cmd.extend(["-s", self.serial])
         cmd.extend(args)
-        
+
         try:
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
             if res.returncode != 0 and res.stderr:
-                logger.debug(f"ADB command {' '.join(cmd)} failed: {res.stderr.strip()}")
+                logger.debug("ADB command %s failed: %s", " ".join(cmd), res.stderr.strip())
             return res
         except subprocess.TimeoutExpired:
-            logger.error(f"ADB command {' '.join(cmd)} timed out after {timeout}s")
+            logger.error("ADB command %s timed out after %ds", " ".join(cmd), timeout)
             raise
 
     def get_devices(self) -> List[Tuple[str, str]]:
         """Returns list of (serial, status) tuples for attached ADB devices."""
         cmd = [self.adb_path, "devices"]
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = subprocess.run(cmd, capture_output=True, text=True, check=False)
         devices = []
         for line in res.stdout.strip().splitlines()[1:]:
             if "\t" in line:
@@ -83,11 +92,12 @@ class ADBWrapper:
         if self.serial:
             cmd.extend(["-s", self.serial])
         cmd.extend(["exec-out", "screencap", "-p"])
-        
-        res = subprocess.run(cmd, capture_output=True)
+
+        res = subprocess.run(cmd, capture_output=True, check=False)
         if res.returncode != 0 or not res.stdout:
-            raise RuntimeError(f"Failed to capture screencap: {res.stderr.decode('utf-8', errors='ignore')}")
-            
+            err_msg = res.stderr.decode("utf-8", errors="ignore")
+            raise RuntimeError(f"Failed to capture screencap: {err_msg}")
+
         return Image.open(io.BytesIO(res.stdout))
 
     def dump_hierarchy(self) -> str:
@@ -101,45 +111,48 @@ class ADBWrapper:
 
     def tap(self, x: int, y: int):
         """Simulates a single touch tap at (x, y)."""
-        logger.info(f"ADB Tap: ({x}, {y})")
+        logger.info("ADB Tap: (%d, %d)", x, y)
         self.execute(["shell", "input", "tap", str(x), str(y)])
 
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int = 300):
         """Simulates a touch drag/swipe from (x1, y1) to (x2, y2)."""
-        logger.info(f"ADB Swipe: ({x1}, {y1}) -> ({x2}, {y2}) [{duration_ms}ms]")
-        self.execute(["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration_ms)])
+        logger.info("ADB Swipe: (%d, %d) -> (%d, %d) [%dms]", x1, y1, x2, y2, duration_ms)
+        self.execute(
+            ["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration_ms)]
+        )
 
     def type_text(self, text: str):
         """Inputs string into focused text field. Escapes special characters for adb shell."""
-        logger.info(f"ADB Type text: {repr(text)}")
-        # Escaping spaces and special characters for adb shell input text
+        logger.info("ADB Type text: %r", text)
         escaped_text = text.replace(" ", "%s").replace("'", "\\'").replace('"', '\\"')
         self.execute(["shell", "input", "text", escaped_text])
 
     def press_key(self, keycode: str):
         """Presses hardware key (HOME, BACK, ENTER, APP_SWITCH, etc.)."""
-        logger.info(f"ADB Press Key: {keycode}")
+        logger.info("ADB Press Key: %s", keycode)
         code = self.KEYCODES.get(keycode.upper())
         if code is not None:
             self.execute(["shell", "input", "keyevent", str(code)])
         else:
-            # Check if keycode is integer
             try:
                 self.execute(["shell", "input", "keyevent", str(int(keycode))])
             except ValueError:
-                logger.error(f"Unknown keycode: {keycode}")
+                logger.error("Unknown keycode: %s", keycode)
 
     def launch_app(self, package_or_activity: str):
         """Launches an app by package name or component activity."""
-        logger.info(f"ADB Launch app: {package_or_activity}")
+        logger.info("ADB Launch app: %s", package_or_activity)
         if "/" in package_or_activity:
             self.execute(["shell", "am", "start", "-n", package_or_activity])
         else:
-            self.execute(["shell", "monkey", "-p", package_or_activity, "-c", "android.intent.category.LAUNCHER", "1"])
+            self.execute([
+                "shell", "monkey", "-p", package_or_activity,
+                "-c", "android.intent.category.LAUNCHER", "1"
+            ])
 
     def stop_app(self, package_name: str):
         """Force stops an app package."""
-        logger.info(f"ADB Stop app: {package_name}")
+        logger.info("ADB Stop app: %s", package_name)
         self.execute(["shell", "am", "force-stop", package_name])
 
     def list_packages(self, third_party_only: bool = True) -> List[str]:
