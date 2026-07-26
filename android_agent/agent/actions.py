@@ -2,12 +2,12 @@
 Action Pydantic schema for structured output decision making by the Android AI Agent.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class ActionType(str, Enum):
+class ActionType(StrEnum):
     """Supported action types for the Android agent."""
 
     TAP_ELEMENT = "TAP_ELEMENT"
