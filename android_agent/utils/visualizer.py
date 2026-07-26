@@ -2,17 +2,16 @@
 Visualizer utility for annotating UI screenshots with bounding boxes and numeric badges.
 """
 
-from typing import List
 from PIL import Image, ImageDraw, ImageFont
 
 
 # pylint: disable=too-many-locals
 def draw_element_boxes(
     image: Image.Image,
-    elements: List[dict],
+    elements: list[dict],
     highlight_color: str = "#FF5722",
     badge_color: str = "#2196F3",
-    text_color: str = "#FFFFFF"
+    text_color: str = "#FFFFFF",
 ) -> Image.Image:
     """
     Draws bounding boxes and numeric ID badges on an image for a list of elements.
@@ -25,8 +24,7 @@ def draw_element_boxes(
 
     try:
         font = ImageFont.load_default()
-    # pylint: disable=broad-exception-caught
-    except Exception:
+    except (OSError, ValueError, AttributeError):
         font = None
 
     for elem in elements:
@@ -55,7 +53,7 @@ def draw_element_boxes(
 
         draw.rectangle(
             [badge_x, badge_y, badge_x + text_width + 4, badge_y + text_height + 4],
-            fill=badge_color
+            fill=badge_color,
         )
         draw.text((badge_x + 2, badge_y + 2), badge_text, fill=text_color, font=font)
 

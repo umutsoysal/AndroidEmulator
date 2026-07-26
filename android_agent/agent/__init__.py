@@ -2,7 +2,7 @@
 Agent logic module containing decision schema, system prompts, and core multimodal execution loop.
 """
 
+from .actions import ActionType, AgentAction
 from .core import AndroidAgent
-from .actions import AgentAction, ActionType
 
-__all__ = ["AndroidAgent", "AgentAction", "ActionType"]
+__all__ = ["ActionType", "AgentAction", "AndroidAgent"]

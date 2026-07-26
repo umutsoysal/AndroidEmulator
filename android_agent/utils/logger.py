@@ -3,6 +3,7 @@ Logging utility using Rich console formatting.
 """
 
 import logging
+
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -15,7 +16,7 @@ def setup_logger(level=logging.INFO):
         level=level,
         format="%(message)s",
         datefmt="[%X]",
-        handlers=[RichHandler(console=console, rich_tracebacks=True, markup=True)]
+        handlers=[RichHandler(console=console, rich_tracebacks=True, markup=True)],
     )
     return logging.getLogger("android_agent")
 

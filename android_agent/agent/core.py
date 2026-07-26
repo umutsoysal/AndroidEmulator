@@ -4,15 +4,16 @@ Autonomous AI Agent core module for Android emulator and device control via Gemi
 
 import os
 import time
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from google import genai
 from google.genai import types
 
 from ..device.adb_wrapper import ADBWrapper
-from ..device.ui_parser import UIParser, UIElement
-from ..utils.visualizer import draw_element_boxes
+from ..device.ui_parser import UIElement, UIParser
 from ..utils.logger import logger
-from .actions import AgentAction, ActionType
+from ..utils.visualizer import draw_element_boxes
+from .actions import ActionType, AgentAction
 from .prompts import SYSTEM_PROMPT
 
 
@@ -21,10 +22,10 @@ class AndroidAgent:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         model_name: str = "gemini-flash-latest",
-        serial: Optional[str] = None,
-        adb_wrapper: Optional[ADBWrapper] = None
+        serial: str | None = None,
+        adb_wrapper: ADBWrapper | None = None,
     ):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
@@ -35,7 +36,7 @@ class AndroidAgent:
         self.client = genai.Client(api_key=self.api_key) if self.api_key else None
         self.model_name = model_name
         self.adb = adb_wrapper or ADBWrapper(serial=serial)
-        self.history: List[Dict[str, Any]] = []
+        self.history: list[dict[str, Any]] = []
 
     def get_current_state(self):
         """Captures screenshot, dumps XML tree, parses UI elements, and annotates image."""
@@ -52,9 +53,9 @@ class AndroidAgent:
     def execute_action(
         self,
         action: AgentAction,
-        elements: List[UIElement],
+        elements: list[UIElement],
         screen_width: int,
-        screen_height: int
+        screen_height: int,
     ):
         """Executes selected action via ADBWrapper."""
         logger.info("[ACTION] %s: %s", action.action_type.value, action.thought)
@@ -67,7 +68,9 @@ class AndroidAgent:
             if target:
                 self.adb.tap(target.center[0], target.center[1])
             else:
-                logger.error("Element ID %d not found in current UI tree.", action.element_id)
+                logger.error(
+                    "Element ID %d not found in current UI tree.", action.element_id
+                )
 
         elif action.action_type == ActionType.TAP_COORDINATE:
             if action.x is not None and action.y is not None:
@@ -118,11 +121,11 @@ class AndroidAgent:
         for e in elements:
             info = f"ID {e.id}: [{e.class_name}] bounds={e.bounds}"
             if e.text:
-                info += f" text={repr(e.text)}"
+                info += f" text={e.text!r}"
             if e.content_desc:
-                info += f" desc={repr(e.content_desc)}"
+                info += f" desc={e.content_desc!r}"
             if e.resource_id:
-                info += f" id={repr(e.resource_id)}"
+                info += f" id={e.resource_id!r}"
             elements_text_lines.append(info)
 
         elements_summary = "\n".join(elements_text_lines)
@@ -176,22 +179,26 @@ Observing the annotated screenshot and elements list, output the structured Agen
                 if "429" in str(e) and attempt < max_retries:
                     logger.warning(
                         "API Rate limit (429) hit. Retrying in %ds (attempt %d/%d)...",
-                        backoff_seconds, attempt, max_retries
+                        backoff_seconds,
+                        attempt,
+                        max_retries,
                     )
                     time.sleep(backoff_seconds)
                     backoff_seconds *= 2
                 else:
-                    raise e
+                    raise
 
         action: AgentAction = response.parsed
 
         # Log and record step
-        self.history.append({
-            "step": len(self.history) + 1,
-            "thought": action.thought,
-            "action": action.action_type.value,
-            "details": action.model_dump(exclude_none=True)
-        })
+        self.history.append(
+            {
+                "step": len(self.history) + 1,
+                "thought": action.thought,
+                "action": action.action_type.value,
+                "details": action.model_dump(exclude_none=True),
+            }
+        )
 
         if action.action_type != ActionType.FINISH:
             self.execute_action(action, elements, w, h)

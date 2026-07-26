@@ -4,6 +4,6 @@ Device package containing low-level ADB controls, AVD manager, and layout hierar
 
 from .adb_wrapper import ADBWrapper
 from .emulator_manager import EmulatorManager
-from .ui_parser import UIParser, UIElement
+from .ui_parser import UIElement, UIParser
 
-__all__ = ["ADBWrapper", "EmulatorManager", "UIParser", "UIElement"]
+__all__ = ["ADBWrapper", "EmulatorManager", "UIElement", "UIParser"]

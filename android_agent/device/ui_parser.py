@@ -5,28 +5,29 @@ Parser module for Android uiautomator layout XML files.
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any
 
 
 @dataclass
 # pylint: disable=too-many-instance-attributes
 class UIElement:
     """Represents a single parsed UI element from Android uiautomator XML."""
+
     id: int
     text: str
     content_desc: str
     resource_id: str
     class_name: str
     package: str
-    bounds: Tuple[int, int, int, int]  # (xmin, ymin, xmax, ymax)
-    center: Tuple[int, int]            # (cx, cy)
+    bounds: tuple[int, int, int, int]  # (xmin, ymin, xmax, ymax)
+    center: tuple[int, int]  # (cx, cy)
     clickable: bool
     editable: bool
     scrollable: bool
     enabled: bool
     focused: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Converts element properties to dictionary."""
         return {
             "id": self.id,
@@ -46,7 +47,7 @@ class UIParser:
     """Parses Android uiautomator dump XML hierarchies."""
 
     @staticmethod
-    def parse_bounds(bounds_str: str) -> Optional[Tuple[int, int, int, int]]:
+    def parse_bounds(bounds_str: str) -> tuple[int, int, int, int] | None:
         """
         Parses bounds string of format '[xmin,ymin][xmax,ymax]'
         Returns (xmin, ymin, xmax, ymax) or None if invalid.
@@ -59,7 +60,9 @@ class UIParser:
 
     @classmethod
     # pylint: disable=too-many-locals
-    def parse_xml(cls, xml_content: str, filter_interactive: bool = True) -> List[UIElement]:
+    def parse_xml(
+        cls, xml_content: str, filter_interactive: bool = True
+    ) -> list[UIElement]:
         """
         Parses XML string into list of UIElement objects.
         If filter_interactive is True, filters out non-interactive or empty elements.
@@ -72,7 +75,7 @@ class UIParser:
         except ET.ParseError:
             return []
 
-        elements: List[UIElement] = []
+        elements: list[UIElement] = []
         element_counter = 1
 
         for node in root.iter():
@@ -102,8 +105,8 @@ class UIParser:
 
             clickable = attr.get("clickable", "false").lower() == "true"
             editable = (
-                attr.get("focused", "false").lower() == "true" or
-                "edittext" in class_name.lower()
+                attr.get("focused", "false").lower() == "true"
+                or "edittext" in class_name.lower()
             )
             scrollable = attr.get("scrollable", "false").lower() == "true"
             enabled = attr.get("enabled", "true").lower() == "true"
@@ -111,7 +114,11 @@ class UIParser:
 
             if filter_interactive:
                 is_meaningful = (
-                    clickable or editable or scrollable or bool(text) or bool(content_desc)
+                    clickable
+                    or editable
+                    or scrollable
+                    or bool(text)
+                    or bool(content_desc)
                 )
                 if not is_meaningful:
                     continue
@@ -129,7 +136,7 @@ class UIParser:
                 editable=editable,
                 scrollable=scrollable,
                 enabled=enabled,
-                focused=focused
+                focused=focused,
             )
             elements.append(element)
             element_counter += 1

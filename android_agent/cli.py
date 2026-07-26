@@ -4,14 +4,15 @@ Command-line interface for the Android AI Agent.
 
 import argparse
 import sys
+
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
 
+from .agent.core import AndroidAgent
 from .device.adb_wrapper import ADBWrapper
 from .device.emulator_manager import EmulatorManager
 from .device.ui_parser import UIParser
-from .agent.core import AndroidAgent
 from .utils.visualizer import draw_element_boxes
 
 load_dotenv()
@@ -23,7 +24,7 @@ def main():
     """Main CLI entrypoint for android-agent."""
     parser = argparse.ArgumentParser(
         prog="android-agent",
-        description="Autonomous AI Agent operating on Android Emulator/Device via ADB & Gemini."
+        description="Autonomous AI Agent operating on Android Emulator/Device via ADB & Gemini.",
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
@@ -45,27 +46,39 @@ def main():
     subparsers.add_parser("devices", help="List connected ADB devices and emulators")
 
     # Command: emulators
-    subparsers.add_parser("emulators", help="List available Android Virtual Devices (AVDs)")
+    subparsers.add_parser(
+        "emulators", help="List available Android Virtual Devices (AVDs)"
+    )
 
     # Command: start-emulator
     start_emu_parser = subparsers.add_parser(
         "start-emulator", help="Launch an Android Virtual Device"
     )
-    start_emu_parser.add_argument("--name", "-n", required=True, help="AVD name to launch")
+    start_emu_parser.add_argument(
+        "--name", "-n", required=True, help="AVD name to launch"
+    )
     start_emu_parser.add_argument(
         "--headless", action="store_true", help="Launch without window UI"
     )
 
     # Command: screenshot
-    ss_parser = subparsers.add_parser("screenshot", help="Capture screenshot from device")
-    ss_parser.add_argument("--output", "-o", default="screenshot.png", help="Output PNG filepath")
+    ss_parser = subparsers.add_parser(
+        "screenshot", help="Capture screenshot from device"
+    )
+    ss_parser.add_argument(
+        "--output", "-o", default="screenshot.png", help="Output PNG filepath"
+    )
     ss_parser.add_argument(
         "--annotate", action="store_true", help="Annotate image with UI badges"
     )
 
     # Command: dump-ui
-    dump_parser = subparsers.add_parser("dump-ui", help="Dump and print current UI element tree")
-    dump_parser.add_argument("--serial", "-s", default=None, help="Device serial number")
+    dump_parser = subparsers.add_parser(
+        "dump-ui", help="Dump and print current UI element tree"
+    )
+    dump_parser.add_argument(
+        "--serial", "-s", default=None, help="Device serial number"
+    )
 
     args = parser.parse_args()
 
@@ -95,9 +108,7 @@ def main():
     elif args.command == "start-emulator":
         emu = EmulatorManager()
         emu.start_emulator(args.name, headless=args.headless)
-        console.print(
-            f"[green]Started emulator process for '{args.name}'.[/green]"
-        )
+        console.print(f"[green]Started emulator process for '{args.name}'.[/green]")
 
     elif args.command == "screenshot":
         adb = ADBWrapper()
@@ -123,15 +134,17 @@ def main():
         for e in elements:
             label = e.text or e.content_desc or e.resource_id or ""
             table.add_row(
-                str(e.id), e.class_name.split(".")[-1], label, str(e.bounds), str(e.center)
+                str(e.id),
+                e.class_name.split(".")[-1],
+                label,
+                str(e.bounds),
+                str(e.center),
             )
         console.print(table)
 
     elif args.command == "run":
         agent = AndroidAgent(
-            api_key=args.api_key,
-            model_name=args.model,
-            serial=args.serial
+            api_key=args.api_key, model_name=args.model, serial=args.serial
         )
         res = agent.run_task(args.task, max_steps=args.max_steps)
         console.print(f"\n[bold blue]Final Agent Output:[/bold blue] {res}")

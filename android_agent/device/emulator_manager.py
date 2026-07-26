@@ -5,14 +5,14 @@ Manager module for listing and launching Android Virtual Devices (AVDs).
 import os
 import shutil
 import subprocess
-from typing import List, Optional
+
 from ..utils.logger import logger
 
 
 class EmulatorManager:
     """Manages Android Virtual Device (AVD) lifecycle."""
 
-    def __init__(self, emulator_path: Optional[str] = None):
+    def __init__(self, emulator_path: str | None = None):
         self.emulator_path = emulator_path or self._find_emulator()
 
     def _find_emulator(self) -> str:
@@ -27,7 +27,9 @@ class EmulatorManager:
             os.path.join(home, "Android", "Sdk", "emulator", "emulator"),
         ]
 
-        android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+        android_home = os.environ.get("ANDROID_HOME") or os.environ.get(
+            "ANDROID_SDK_ROOT"
+        )
         if android_home:
             candidates.insert(0, os.path.join(android_home, "emulator", "emulator"))
 
@@ -37,7 +39,7 @@ class EmulatorManager:
 
         return "emulator"
 
-    def list_avds(self) -> List[str]:
+    def list_avds(self) -> list[str]:
         """Lists available Android Virtual Device names."""
         try:
             res = subprocess.run(
@@ -45,10 +47,12 @@ class EmulatorManager:
                 capture_output=True,
                 text=True,
                 timeout=10,
-                check=False
+                check=False,
             )
             if res.returncode == 0:
-                return [line.strip() for line in res.stdout.splitlines() if line.strip()]
+                return [
+                    line.strip() for line in res.stdout.splitlines() if line.strip()
+                ]
         except (subprocess.SubprocessError, OSError) as e:
             logger.error("Failed to list AVDs: %s", e)
         return []
@@ -61,5 +65,7 @@ class EmulatorManager:
 
         logger.info("Starting emulator '%s' (headless=%s)...", avd_name, headless)
         # pylint: disable=consider-using-with
-        process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         return process

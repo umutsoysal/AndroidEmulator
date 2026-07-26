@@ -3,12 +3,14 @@ Unit tests for Android Agent components.
 """
 
 import unittest
+
 from PIL import Image
-from android_agent.device.ui_parser import UIParser
+
+from android_agent.agent.actions import ActionType, AgentAction
 from android_agent.device.adb_wrapper import ADBWrapper
 from android_agent.device.emulator_manager import EmulatorManager
+from android_agent.device.ui_parser import UIParser
 from android_agent.utils.visualizer import draw_element_boxes
-from android_agent.agent.actions import AgentAction, ActionType
 
 
 class TestAndroidAgentComponents(unittest.TestCase):
@@ -48,7 +50,7 @@ class TestAndroidAgentComponents(unittest.TestCase):
         img = Image.new("RGB", (500, 500), color="white")
         elements = [
             {"id": 1, "bounds": [50, 100, 400, 200]},
-            {"id": 2, "bounds": [50, 220, 400, 320]}
+            {"id": 2, "bounds": [50, 220, 400, 320]},
         ]
         annotated = draw_element_boxes(img, elements)
         self.assertEqual(annotated.size, (500, 500))
@@ -58,7 +60,7 @@ class TestAndroidAgentComponents(unittest.TestCase):
         action = AgentAction(
             thought="Tapping Settings item",
             action_type=ActionType.TAP_ELEMENT,
-            element_id=1
+            element_id=1,
         )
         self.assertEqual(action.action_type, ActionType.TAP_ELEMENT)
         self.assertEqual(action.element_id, 1)

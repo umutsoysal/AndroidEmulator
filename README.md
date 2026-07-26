@@ -115,15 +115,10 @@ from android_agent import AndroidAgent, ADBWrapper
 adb = ADBWrapper()
 
 # 2. Instantiate agent
-agent = AndroidAgent(
-    model_name="gemini-2.5-flash"
-)
+agent = AndroidAgent(model_name="gemini-2.5-flash")
 
 # 3. Run autonomous task loop
-result = agent.run_task(
-    task="Open Settings and turn on Dark Mode",
-    max_steps=10
-)
+result = agent.run_task(task="Open Settings and turn on Dark Mode", max_steps=10)
 
 print("Agent finished:", result)
 ```
