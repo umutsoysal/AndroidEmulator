@@ -7,7 +7,7 @@ name = "android-agent"
 version = "0.1.0"
 description = "Autonomous AI Agent operating on Android Emulator and Physical Devices via ADB and Gemini AI"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "google-genai>=0.1.1",
     "pillow>=10.0.0",
@@ -21,7 +21,7 @@ android-agent = "android_agent.cli:main"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

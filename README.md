@@ -40,7 +40,7 @@ An autonomous AI Agent that operates on Android emulators or physical Android sm
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - Android SDK / ADB installed (e.g. at `~/Library/Android/sdk/platform-tools/adb` or available in `PATH`)
 - A valid `GEMINI_API_KEY` (Get one from [Google AI Studio](https://aistudio.google.com/app/api-keys))
 
