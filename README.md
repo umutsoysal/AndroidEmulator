@@ -1,6 +1,6 @@
 # Android GUI Automation Agent
 
-[![CI & Linting](https://github.com/umutsoysal/AndroidEmulator/actions/workflows/ci.yml/badge.svg)](https://github.com/umutsoysal/AndroidEmulator/actions/workflows/ci.yml)
+[![CI & Linting](https://github.com/umutsoysal/AndroidEmulator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/umutsoysal/AndroidEmulator/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
